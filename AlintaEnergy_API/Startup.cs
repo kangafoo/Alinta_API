@@ -2,12 +2,17 @@ using AlintaEnergy_API.ApplicationLayer;
 using AlintaEnergy_API.Models;
 using AlintaEnergy_API.Repositories;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
+using Serilog;
 
 namespace AlintaEnergy_API
 {
@@ -16,6 +21,8 @@ namespace AlintaEnergy_API
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            // Init Serilog configuration
+            Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configuration).CreateLogger();
         }
 
         public IConfiguration Configuration { get; }
@@ -36,7 +43,7 @@ namespace AlintaEnergy_API
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -65,6 +72,18 @@ namespace AlintaEnergy_API
                 c.RoutePrefix = string.Empty;
             });
 
+            app.UseExceptionHandler(a => a.Run(async context =>
+            {
+                var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                var exception = exceptionHandlerPathFeature.Error;
+
+                var result = JsonConvert.SerializeObject(new { error = exception.Message });
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(result);
+            }));
+
+            // logging
+            loggerFactory.AddSerilog();
         }
     }
 }
