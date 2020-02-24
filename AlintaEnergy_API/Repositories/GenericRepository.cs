@@ -46,12 +46,12 @@ namespace AlintaEnergy_API.Repositories
         public async Task<IEnumerable<T>> FindByCondition(Expression<Func<T, bool>> expression)
         {
             return await Entities
-                .Where(expression).ToListAsync();
+                .Where(expression).ToListAsync().ConfigureAwait(true);
         }
 
         public async Task<T> FindByConditionSingle(Expression<Func<T, bool>> expression)
         {
-            return await Entities.FirstAsync(expression);
+            return await Entities.FirstAsync(expression).ConfigureAwait(true);
         }
     }
 }

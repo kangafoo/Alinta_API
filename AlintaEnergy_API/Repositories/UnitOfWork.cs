@@ -19,7 +19,7 @@ namespace AlintaEnergy_API.Repositories
         }
         public async Task Commit()
         {
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync().ConfigureAwait(true);
         }
         public void Dispose()
         {
